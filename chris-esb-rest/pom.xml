@@ -107,6 +107,18 @@
       <artifactId>camel-test</artifactId>
       <scope>test</scope>
     </dependency>
+
+    <dependency>
+      <groupId>com.alibaba</groupId>
+      <artifactId>fastjson</artifactId>
+      <version>1.2.29</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.chris.esb</groupId>
+      <artifactId>chris-esb-dao</artifactId>
+      <version>1.0.1-SNAPSHOT</version>
+    </dependency>
   </dependencies>
 
   <build>

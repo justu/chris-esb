@@ -35,6 +35,8 @@
 	</parent>
 
   <modules>
+    <module>chris-esb-app</module>
+    <module>chris-esb-dao</module>
     <module>chris-esb-rest</module>
   </modules>
 
