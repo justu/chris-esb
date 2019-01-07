@@ -21,6 +21,7 @@ import com.chris.esb.rest.dashi.doorctrl.model.RemoteOpenDoorParam;
 import com.chris.esb.rest.springboot.utils.CommonResponse;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.model.rest.RestBindingMode;
+import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
@@ -33,7 +34,8 @@ import static org.apache.camel.model.rest.RestParamType.body;
  */
 @Component
 public class CamelRouter extends RouteBuilder {
-    
+    private Logger logger = Logger.getLogger(CamelRouter.class);
+
     @Autowired
     private Environment env;
     
@@ -45,6 +47,7 @@ public class CamelRouter extends RouteBuilder {
 
     @Override
     public void configure() throws Exception {
+        logger.error("camel router init*******************");
         restConfiguration()
             .component("servlet")
             .bindingMode(RestBindingMode.json)
@@ -70,6 +73,7 @@ public class CamelRouter extends RouteBuilder {
                 .param().name("body").type(body).description("door controller reserve").endParam()
                 .responseMessage().code(200).message("success").endResponseMessage()
                 .to("bean:doorCtrlMgrService?method=doorCtrlReserve");
+        logger.error("camel router end*******************");
     }
 
 }
