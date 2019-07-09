@@ -16,6 +16,7 @@
  */
 package com.chris.esb.rest.springboot;
 
+import com.alibaba.fastjson.JSONObject;
 import com.chris.esb.rest.dashi.doorctrl.model.DoorCtrlReserveParam;
 import com.chris.esb.rest.dashi.doorctrl.model.RemoteOpenDoorParam;
 import com.chris.esb.rest.springboot.utils.CommonResponse;
@@ -73,6 +74,14 @@ public class CamelRouter extends RouteBuilder {
                 .param().name("body").type(body).description("door controller reserve").endParam()
                 .responseMessage().code(200).message("success").endResponseMessage()
                 .to("bean:doorCtrlMgrService?method=doorCtrlReserve");
+
+        rest("/doorCtrlReserve4Coson").consumes("application/json")
+                .produces("application/json").
+                post().description("Door Controller Reserve 4 Coson").type(JSONObject.class).outType(CommonResponse.class)
+                .param().name("body").type(body).description("door controller reserve 4 Coson").endParam()
+                .responseMessage().code(200).message("success").endResponseMessage()
+                .to("bean:doorCtrlMgrService?method=doorCtrlReserve4Coson");
+
         logger.error("camel router end*******************");
     }
 

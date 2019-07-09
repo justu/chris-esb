@@ -5,6 +5,10 @@ camel:
     servlet:
       mapping:
         context-path: /esb/*
+chris:
+  esb:
+    doorCtrlUrl:
+      coson: http://192.168.1.10:8888/
 spring:
   transaction:
       rollback-on-commit-failure: true

@@ -11,9 +11,12 @@ import com.chris.esb.rest.dashi.doorctrl.model.RemoteOpenDoorParam;
 import com.chris.esb.rest.dashi.doorctrl.service.DoorCtrlMgrService;
 import com.chris.esb.rest.springboot.utils.CommonException;
 import com.chris.esb.rest.springboot.utils.CommonResponse;
+import com.chris.esb.rest.springboot.utils.RestTemplateUtils;
+import com.google.common.collect.ImmutableMap;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
@@ -37,18 +40,41 @@ public class DoorCtrlMgrServiceImpl implements DoorCtrlMgrService {
     private static String SQLSERVER_CONFIG = "SQLSERVER_CONFIG";
     private static Logger log = Logger.getLogger(DoorCtrlMgrServiceImpl.class);
 
+    @Value("${chris.esb.doorCtrlUrl.coson}")
+    private String doorCtrlUrl;
+
     @Autowired
     private EsbConfigService esbConfigService;
 
+    @Autowired
+    private RestTemplateUtils restTemplateUtils;
+
     @Override
     public CommonResponse remoteOpenDoor(RemoteOpenDoorParam doorController) {
+        if (ObjectUtils.nullSafeEquals("dasDoorCtrlProvider", doorController.getDoorCtrlProvier())) {
+            return this.remoteOpenDoor4Das(doorController);
+        } else {
+            return this.remoteOpenDoor4Coson(doorController);
+        }
+    }
+
+    private CommonResponse remoteOpenDoor4Coson(RemoteOpenDoorParam doorController) {
+        String result = this.restTemplateUtils.httpGetUrlVariable(this.doorCtrlUrl + "open_door", String.class, ImmutableMap.of("target_ip", doorController.getDoorCtrlIP(), "door", doorController.getDoorId()));
+        JSONObject jsonObject = JSONObject.parseObject(result);
+        if (ObjectUtils.nullSafeEquals("0", jsonObject.getInteger("status"))) {
+            return CommonResponse.ok();
+        } else {
+            return CommonResponse.error(jsonObject.getString("msg"));
+        }
+    }
+
+    private CommonResponse remoteOpenDoor4Das(RemoteOpenDoorParam doorController) {
         String deviceIP = doorController.getDoorCtrlIP();
         String deviceMacAddr = doorController.getMacAddr();
         int readerNo = doorController.getDoorReaderNo();
         DatagramSocket client = null;
         DatagramPacket sendPacket;
         DatagramPacket receivePacket;
-        CommonResponse resp = CommonResponse.ok();
         try {
             client = new DatagramSocket();
             client.setSoTimeout(3000);
@@ -65,16 +91,14 @@ public class DoorCtrlMgrServiceImpl implements DoorCtrlMgrService {
             client.receive(receivePacket);
             String receiveData = this.bytesToHexString(receivePacket.getData());
             log.error("设备[{" + deviceMacAddr + "}] 接收指令= {" + receiveData + "}");
-            resp = this.parseReceiveData(receiveData);
+            return this.parseReceiveData(receiveData);
         } catch (Exception e) {
             e.printStackTrace();
             log.error("远程开门异常！原因：" + e.getMessage());
-            resp = CommonResponse.error("远程开门异常！请联系管理员");
+            return CommonResponse.error("远程开门异常！请联系管理员");
         } finally {
             IOUtils.closeQuietly(client);
         }
-//        return JSONObject.toJSONString(resp);
-        return resp;
     }
 
     private CommonResponse parseReceiveData(String receiveData) {
@@ -148,6 +172,11 @@ public class DoorCtrlMgrServiceImpl implements DoorCtrlMgrService {
         return Integer.valueOf(this.esbConfigService.getValueByKey(DOOR_CTRL_RECEIVE_PORT));
     }
 
+
+    @Override
+    public CommonResponse doorCtrlReserve4Coson(JSONObject jsonObject) {
+        return CommonResponse.ok();
+    }
     /**
      * 门禁预约
      * @param param
@@ -179,6 +208,7 @@ public class DoorCtrlMgrServiceImpl implements DoorCtrlMgrService {
                     ps.addBatch();
                 }
             });
+            log.error("门禁");
         } catch (Exception e) {
             e.printStackTrace();
             log.error("门禁预约异常！原因：" + e.getMessage());

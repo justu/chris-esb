@@ -11,6 +11,10 @@ public class RemoteOpenDoorParam implements Serializable {
 
     private Integer doorReaderNo;
 
+    private String doorCtrlProvier;
+
+    private String doorId;
+
     public RemoteOpenDoorParam() {
     }
 
@@ -42,5 +46,21 @@ public class RemoteOpenDoorParam implements Serializable {
 
     public void setDoorReaderNo(Integer doorReaderNo) {
         this.doorReaderNo = doorReaderNo;
+    }
+
+    public String getDoorCtrlProvier() {
+        return doorCtrlProvier;
+    }
+
+    public void setDoorCtrlProvier(String doorCtrlProvier) {
+        this.doorCtrlProvier = doorCtrlProvier;
+    }
+
+    public String getDoorId() {
+        return doorId;
+    }
+
+    public void setDoorId(String doorId) {
+        this.doorId = doorId;
     }
 }
