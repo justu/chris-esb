@@ -1,18 +1,16 @@
 package com.chris.esb.rest.dashi.doorctrl.service.impl;
-import java.util.Date;
 
 import com.alibaba.fastjson.JSONObject;
 import com.chris.esb.common.model.JDBCParam;
 import com.chris.esb.common.service.EsbConfigService;
 import com.chris.esb.common.utils.JDBCUtils4SQLServer;
-import com.chris.esb.rest.dashi.doorctrl.model.DoorCtrlAuthParam;
-import com.chris.esb.rest.dashi.doorctrl.model.DoorCtrlReserveParam;
-import com.chris.esb.rest.dashi.doorctrl.model.RemoteOpenDoorParam;
+import com.chris.esb.rest.dashi.doorctrl.model.*;
 import com.chris.esb.rest.dashi.doorctrl.service.DoorCtrlMgrService;
 import com.chris.esb.rest.springboot.utils.CommonException;
 import com.chris.esb.rest.springboot.utils.CommonResponse;
 import com.chris.esb.rest.springboot.utils.RestTemplateUtils;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,7 +23,9 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.sql.Timestamp;
+import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 @Service("doorCtrlMgrService")
 public class DoorCtrlMgrServiceImpl implements DoorCtrlMgrService {
@@ -174,7 +174,20 @@ public class DoorCtrlMgrServiceImpl implements DoorCtrlMgrService {
 
 
     @Override
-    public CommonResponse doorCtrlReserve4Coson(JSONObject jsonObject) {
+    public CommonResponse doorCtrlReserve4Coson(CosonDoorCtrlReserveParam param) {
+        List<CosonDoorCtrlReqDTO> list = param.getParams();
+        list.forEach(item -> {
+            Map<String, Object> paramMap = Maps.newHashMap();
+            paramMap.put("pwd", "888888");
+            paramMap.put("door", "1111");
+            paramMap.put("door_time", "00000000");
+            paramMap.put("user_id", item.getUserCardId());
+            paramMap.put("user_type", "1");
+            paramMap.put("valid_time", item.getEndTime());
+            this.restTemplateUtils.httpPostMediaTypeFromData(this.doorCtrlUrl + "task_cardpower?id=1&target_id=" + item.getDoorCtrlIp(),
+                    String.class, paramMap);
+
+        });
         return CommonResponse.ok();
     }
     /**
