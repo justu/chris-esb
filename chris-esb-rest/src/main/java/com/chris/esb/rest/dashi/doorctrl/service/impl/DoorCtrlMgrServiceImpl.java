@@ -184,18 +184,14 @@ public class DoorCtrlMgrServiceImpl implements DoorCtrlMgrService {
        /* paramMap.put("pw", "888888");
         paramMap.put("door", "1111");
         paramMap.put("door_time", "00000000");*/
-        paramMap.put("user_id", item.getUserCardId() + "");
-//        paramMap.put("user_type", item.getUserType());
-        /*paramMap.put("id", item.getOperationType() + "");
-        paramMap.put("target_id", item.getDoorCtrlIp());*/
+        paramMap.put("user_id", item.getUserCardId());
+        paramMap.put("user_type", item.getUserType() + "");
         if (4 == item.getOperationType()) {
             // 临时卡才需要设置生效时间
             paramMap.put("start_time", item.getStartTime());
         }
-        //paramMap.put("valid_time", item.getEndTime());
-        String url = this.doorCtrlUrl + "task_cardpower?id=" + item.getOperationType() + "&target_id=" + item.getDoorCtrlIp();
-        List<String> paramValues = this.buildParamValues(paramMap);
-//            HttpTinyClient.HttpResult resp = HttpTinyClient.httpPost(url, Lists.newArrayList(), paramValues, HttpTinyClient.ENCODING_UTF_8, HttpTinyClient.READ_TIMEOUT);
+        paramMap.put("valid_time", item.getEndTime());
+        String url = this.doorCtrlUrl + "task_cardpower?id=" + item.getOperationType() + "&target_ip=" + item.getDoorCtrlIp();
         String result = this.restTemplateUtils.httpPostMediaTypeFromData(url, String.class, paramMap);
         JSONObject jsonObj = JSONObject.parseObject(result);
         if (ObjectUtils.nullSafeEquals(COSON_RESP_OK, jsonObj.getIntValue("status"))) {
@@ -204,11 +200,6 @@ public class DoorCtrlMgrServiceImpl implements DoorCtrlMgrService {
         } else {
             return CommonResponse.error(jsonObj.getString("data"));
         }
-        /*try {
-        } catch (IOException e) {
-            e.printStackTrace();
-            return CommonResponse.error("请求异常!");
-        }*/
     }
 
     private List<String> buildParamValues(Map<String, Object> paramMap) {
@@ -288,13 +279,20 @@ public class DoorCtrlMgrServiceImpl implements DoorCtrlMgrService {
         param.setStartTime(new Date());
         System.out.println(JSONObject.toJSONString(param));
 
-        try {
-            String s = URLEncoder.encode("http://localhost/demo?ip=\"192.168.1.10\"", "UTF-8");
-            System.out.println(s);
-            System.out.println(URLDecoder.decode(s, "UTF-8"));
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        }
+        CosonDoorCtrlReserveParam p = new CosonDoorCtrlReserveParam();
+        List<CosonDoorCtrlReqDTO> list = Lists.newArrayList();
+        CosonDoorCtrlReqDTO item = new CosonDoorCtrlReqDTO();
+        item.setDoorCtrlIp("192.168.1.77");
+        item.setUserCardId("3375978");
+        item.setStartTime("2019-07-12 09:30:00");
+        item.setEndTime("2019-07-12 19:30:00");
+        item.setUserType(1);
+        item.setOperationType(4);
+
+        list.add(item);
+        p.setParams(list);
+        System.out.println(JSONObject.toJSONString(p));
+
     }
 
 
