@@ -8,8 +8,10 @@ import com.chris.esb.rest.dashi.doorctrl.model.*;
 import com.chris.esb.rest.dashi.doorctrl.service.DoorCtrlMgrService;
 import com.chris.esb.rest.springboot.utils.CommonException;
 import com.chris.esb.rest.springboot.utils.CommonResponse;
+import com.chris.esb.rest.springboot.utils.HttpTinyClient;
 import com.chris.esb.rest.springboot.utils.RestTemplateUtils;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
@@ -19,9 +21,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
 
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.*;
 import java.sql.Timestamp;
 import java.util.Date;
 import java.util.List;
@@ -38,6 +40,7 @@ public class DoorCtrlMgrServiceImpl implements DoorCtrlMgrService {
     private static int NO_TWO = 2;
     private static int NO_THREEE = 3;
     private static String SQLSERVER_CONFIG = "SQLSERVER_CONFIG";
+    private static final int COSON_RESP_OK = 0;
     private static Logger log = Logger.getLogger(DoorCtrlMgrServiceImpl.class);
 
     @Value("${chris.esb.doorCtrlUrl.coson}")
@@ -61,10 +64,10 @@ public class DoorCtrlMgrServiceImpl implements DoorCtrlMgrService {
     private CommonResponse remoteOpenDoor4Coson(RemoteOpenDoorParam doorController) {
         String result = this.restTemplateUtils.httpGetUrlVariable(this.doorCtrlUrl + "open_door", String.class, ImmutableMap.of("target_ip", doorController.getDoorCtrlIP(), "door", doorController.getDoorId()));
         JSONObject jsonObject = JSONObject.parseObject(result);
-        if (ObjectUtils.nullSafeEquals("0", jsonObject.getInteger("status"))) {
+        if (ObjectUtils.nullSafeEquals(COSON_RESP_OK, jsonObject.getInteger("status"))) {
             return CommonResponse.ok();
         } else {
-            return CommonResponse.error(jsonObject.getString("msg"));
+            return CommonResponse.error(jsonObject.getString("data"));
         }
     }
 
@@ -175,26 +178,48 @@ public class DoorCtrlMgrServiceImpl implements DoorCtrlMgrService {
 
     @Override
     public CommonResponse doorCtrlReserve4Coson(CosonDoorCtrlReserveParam param) {
-        List<CosonDoorCtrlReqDTO> list = param.getParams();
-        list.forEach(item -> {
-            Map<String, Object> paramMap = Maps.newHashMap();
-            paramMap.put("pwd", "888888");
-            paramMap.put("door", "1111");
-            paramMap.put("door_time", "00000000");
-            paramMap.put("user_id", item.getUserCardId() + "");
-            paramMap.put("user_type", item.getUserType() + "");
-            if (4 == item.getOperationType()) {
-                // 临时卡才需要设置生效时间
-                paramMap.put("start_time", item.getStartTime());
-            }
-            paramMap.put("valid_time", item.getEndTime());
-            this.restTemplateUtils.httpPostMediaTypeFromData(this.doorCtrlUrl + "task_cardpower?id=" + item.getOperationType() + "&target_id=" + item.getDoorCtrlIp(),
-                    String.class, paramMap);
-
-        });
-        log.error("科松门禁授权成功");
-        return CommonResponse.ok();
+        // TODO 暂时只处理一个
+        CosonDoorCtrlReqDTO item = param.getParams().get(0);
+        Map<String, Object> paramMap = Maps.newHashMap();
+       /* paramMap.put("pw", "888888");
+        paramMap.put("door", "1111");
+        paramMap.put("door_time", "00000000");*/
+        paramMap.put("user_id", item.getUserCardId() + "");
+//        paramMap.put("user_type", item.getUserType());
+        /*paramMap.put("id", item.getOperationType() + "");
+        paramMap.put("target_id", item.getDoorCtrlIp());*/
+        if (4 == item.getOperationType()) {
+            // 临时卡才需要设置生效时间
+            paramMap.put("start_time", item.getStartTime());
+        }
+        //paramMap.put("valid_time", item.getEndTime());
+        String url = this.doorCtrlUrl + "task_cardpower?id=" + item.getOperationType() + "&target_id=" + item.getDoorCtrlIp();
+        List<String> paramValues = this.buildParamValues(paramMap);
+//            HttpTinyClient.HttpResult resp = HttpTinyClient.httpPost(url, Lists.newArrayList(), paramValues, HttpTinyClient.ENCODING_UTF_8, HttpTinyClient.READ_TIMEOUT);
+        String result = this.restTemplateUtils.httpPostMediaTypeFromData(url, String.class, paramMap);
+        JSONObject jsonObj = JSONObject.parseObject(result);
+        if (ObjectUtils.nullSafeEquals(COSON_RESP_OK, jsonObj.getIntValue("status"))) {
+            log.error("科松门禁授权成功");
+            return CommonResponse.ok();
+        } else {
+            return CommonResponse.error(jsonObj.getString("data"));
+        }
+        /*try {
+        } catch (IOException e) {
+            e.printStackTrace();
+            return CommonResponse.error("请求异常!");
+        }*/
     }
+
+    private List<String> buildParamValues(Map<String, Object> paramMap) {
+        List<String> paramValues = Lists.newArrayList();
+        paramMap.forEach((k, v) -> {
+            paramValues.add(k);
+            paramValues.add(v.toString());
+        });
+        return paramValues;
+    }
+
     /**
      * 门禁预约
      * @param param
@@ -262,5 +287,15 @@ public class DoorCtrlMgrServiceImpl implements DoorCtrlMgrService {
         param.setPreventCard(1);
         param.setStartTime(new Date());
         System.out.println(JSONObject.toJSONString(param));
+
+        try {
+            String s = URLEncoder.encode("http://localhost/demo?ip=\"192.168.1.10\"", "UTF-8");
+            System.out.println(s);
+            System.out.println(URLDecoder.decode(s, "UTF-8"));
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
     }
+
+
 }

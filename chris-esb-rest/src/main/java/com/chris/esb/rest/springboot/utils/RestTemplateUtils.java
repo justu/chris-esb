@@ -59,6 +59,7 @@ public class RestTemplateUtils {
             }
         }
         T result = restTemplate.getForObject(url + "?" + urlParams, respType, urlVariableMap);
+        log.info("Http Post请求   MediaType  get  \r\nUrl=" + url + "  \r\nparam=" + JSON.toJSONString(urlVariableMap)+ " \r\nresult=" + JSON.toJSONString(result));
         return result;
     }
 
@@ -89,7 +90,7 @@ public class RestTemplateUtils {
      * @param <T>       返回类型
      * @return
      */
-    public <T> T httpPostMediaTypeFromData(String url, Class<T> respType, Map<String, ?> obj){
+    public <T> T httpPostMediaTypeFromData(String url, Class<T> respType, Map<String, Object> obj){
         LinkedMultiValueMap multMap = new LinkedMultiValueMap();
         if(obj!=null && obj.size()>0){
             for(String m : obj.keySet()){
@@ -102,6 +103,7 @@ public class RestTemplateUtils {
         headers.add("Accept", MediaType.APPLICATION_JSON_VALUE);
         HttpEntity<LinkedMultiValueMap> req = new HttpEntity<LinkedMultiValueMap>(multMap, headers);
         T result = restTemplate.postForObject(url, req, respType);
+        log.info("Http Post请求   MediaType  application/x-www-form-urlencoded  \r\nUrl=" + url + "  \r\nparam=" + JSON.toJSONString(obj) + " \r\nresult=" + result);
         return result;
     }
 }
