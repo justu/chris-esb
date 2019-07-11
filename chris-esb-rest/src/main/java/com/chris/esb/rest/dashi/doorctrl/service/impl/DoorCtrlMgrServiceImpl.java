@@ -181,13 +181,18 @@ public class DoorCtrlMgrServiceImpl implements DoorCtrlMgrService {
             paramMap.put("pwd", "888888");
             paramMap.put("door", "1111");
             paramMap.put("door_time", "00000000");
-            paramMap.put("user_id", item.getUserCardId());
-            paramMap.put("user_type", "1");
+            paramMap.put("user_id", item.getUserCardId() + "");
+            paramMap.put("user_type", item.getUserType() + "");
+            if (4 == item.getOperationType()) {
+                // 临时卡才需要设置生效时间
+                paramMap.put("start_time", item.getStartTime());
+            }
             paramMap.put("valid_time", item.getEndTime());
-            this.restTemplateUtils.httpPostMediaTypeFromData(this.doorCtrlUrl + "task_cardpower?id=1&target_id=" + item.getDoorCtrlIp(),
+            this.restTemplateUtils.httpPostMediaTypeFromData(this.doorCtrlUrl + "task_cardpower?id=" + item.getOperationType() + "&target_id=" + item.getDoorCtrlIp(),
                     String.class, paramMap);
 
         });
+        log.error("科松门禁授权成功");
         return CommonResponse.ok();
     }
     /**

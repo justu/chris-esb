@@ -11,6 +11,19 @@ public class CosonDoorCtrlReqDTO implements Serializable {
     private String userCardId;
     private String startTime;
     private String endTime;
+    /**
+     * 1：添加权限卡
+     * 2：删除权限卡
+     * 3：修改权限卡
+     * 4：预设临时卡时间
+     */
+    private int operationType;
+    /**
+     * 用户类型
+     * 0：固定卡
+     * 1：临时卡
+     */
+    private int userType;
 
     public Integer getDoorId() {
         return doorId;
@@ -58,5 +71,21 @@ public class CosonDoorCtrlReqDTO implements Serializable {
 
     public void setEndTime(String endTime) {
         this.endTime = endTime;
+    }
+
+    public int getUserType() {
+        return userType;
+    }
+
+    public void setUserType(int userType) {
+        this.userType = userType;
+    }
+
+    public int getOperationType() {
+        return operationType;
+    }
+
+    public void setOperationType(int operationType) {
+        this.operationType = operationType;
     }
 }
